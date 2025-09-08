@@ -606,6 +606,33 @@ Route::get('/fix-table-structure', function () {
     }
 });
 
+// Fix column names to match manual_setup.sql
+Route::get('/fix-column-names', function () {
+    try {
+        $results = [];
+        
+        // Check and rename dt_classification to downtime_classification
+        $columns = DB::select("SHOW COLUMNS FROM downtime_classifications LIKE 'dt_classification'");
+        if (!empty($columns)) {
+            DB::statement("ALTER TABLE downtime_classifications CHANGE dt_classification downtime_classification VARCHAR(255)");
+            $results[] = "Renamed dt_classification to downtime_classification";
+        } else {
+            $results[] = "dt_classification column not found";
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Column names fixed successfully',
+            'changes' => $results
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
 // Drop model_name column to match manual_setup.sql structure
 Route::get('/drop-model-name', function () {
     try {
