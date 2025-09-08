@@ -667,6 +667,98 @@ Route::get('/check-tables', function () {
     }
 });
 
+// Import data with correct structure (model_code, model_year)
+Route::get('/import-correct-data', function () {
+    try {
+        DB::beginTransaction();
+        
+        $results = [];
+        
+        // Insert Model Items with correct structure
+        $modelsInserted = 0;
+        $models = [
+            ['model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM PERTAMA'],
+            ['model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KEDUA'],
+            ['model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KETIGA']
+        ];
+        
+        foreach ($models as $model) {
+            $exists = DB::table('model_items')
+                ->where('model_code', $model['model_code'])
+                ->where('item_name', $model['item_name'])
+                ->exists();
+                
+            if (!$exists) {
+                DB::table('model_items')->insert([
+                    'model_code' => $model['model_code'],
+                    'model_year' => $model['model_year'],
+                    'item_name' => $model['item_name'],
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                $modelsInserted++;
+            }
+        }
+        $results['model_items'] = $modelsInserted;
+        
+        // Insert Process Names
+        $processesInserted = 0;
+        $processes = ['Line All', 'OP.10', 'OP.20', 'OP.30', 'OP.40'];
+        
+        foreach ($processes as $process) {
+            $exists = DB::table('process_names')
+                ->where('process_name', $process)
+                ->exists();
+                
+            if (!$exists) {
+                DB::table('process_names')->insert([
+                    'process_name' => $process,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                $processesInserted++;
+            }
+        }
+        $results['process_names'] = $processesInserted;
+        
+        // Insert Downtime Classifications
+        $classificationsInserted = 0;
+        $classifications = [
+            'Planned Downtime', 'Gomi', 'Kiriko', 'Dent', 'Scratch', 'Crack', 'Necking', 'Burry', 'Ding'
+        ];
+        
+        foreach ($classifications as $classification) {
+            $exists = DB::table('downtime_classifications')
+                ->where('downtime_classification', $classification)
+                ->exists();
+                
+            if (!$exists) {
+                DB::table('downtime_classifications')->insert([
+                    'downtime_classification' => $classification,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                $classificationsInserted++;
+            }
+        }
+        $results['downtime_classifications'] = $classificationsInserted;
+        
+        DB::commit();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data imported successfully with correct structure',
+            'inserted' => $results
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
 // Simple data import route
 Route::get('/setup-data', function () {
     try {
