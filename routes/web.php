@@ -515,6 +515,44 @@ Route::get('/import-sample-data', function () {
     }
 });
 
+// Simple admin user creation
+Route::get('/create-admin', function () {
+    try {
+        // Create simple admin user
+        $adminExists = DB::table('users')->where('email', 'admin@email.com')->exists();
+        
+        if (!$adminExists) {
+            DB::table('users')->insert([
+                'name' => 'Admin User',
+                'email' => 'admin@email.com',
+                'password' => '$2y$12$OiP2UF66w5DyZ2aomWPU3.bjeskEnr5HSs9dahYbVTXfCX/njCHae', // password: aaaaa
+                'is_admin' => 1,
+                'email_verified_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            $message = 'Admin user created successfully';
+        } else {
+            DB::table('users')->where('email', 'admin@email.com')->update(['is_admin' => 1]);
+            $message = 'Admin user already exists, updated admin status';
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => $message,
+            'login_info' => [
+                'email' => 'admin@email.com',
+                'password' => 'aaaaa'
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
 // Check migration status
 Route::get('/check-migrations', function () {
     try {
