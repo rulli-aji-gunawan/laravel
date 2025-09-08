@@ -322,6 +322,35 @@
             width: calc(100% - 50px);
         }
 
+        /* Toggle Sidebar Button */
+        .toggle-sidebar {
+            position: fixed;
+            top: 60px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            border-radius: 50%;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-sidebar:hover {
+            background: #f0f0f0;
+            transform: scale(1.1);
+        }
+
+        .toggle-sidebar i {
+            font-size: 24px;
+            color: var(--color_Green1);
+            transition: all 0.3s ease;
+        }
+
+        .toggle-sidebar:hover i {
+            color: var(--color_Green2);
+        }
+
         /* Logout styling */
         .logout {
             margin-left: auto;
@@ -369,6 +398,12 @@
             </form>
         </div>
     </header>
+
+    <!-- Toggle Sidebar Button -->
+    <div class="toggle-sidebar" style="position: fixed; top: 60px; left: 10px; z-index: 1000; background: white; border-radius: 50%; padding: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); cursor: pointer;">
+        <i class='bx bx-x-circle' id="hide-toggle" style="font-size: 24px; color: #1c6d3f;"></i>
+        <i class='bx bx-menu' id="show-toggle" style="font-size: 24px; color: #1c6d3f; display: none;"></i>
+    </div>
 
     <div class="sidebar close">
         <!-- ========== Logo ============  -->
@@ -493,37 +528,67 @@
 
 <!-- Inline sidebar JavaScript backup -->
 <script>
-    // Sidebar functionality inline backup
-    const listItems = document.querySelectorAll(".sidebar-list li");
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sidebar functionality inline backup
+        const listItems = document.querySelectorAll(".sidebar-list li");
 
-    listItems.forEach((item) => {
-      item.addEventListener("click", () => {
-        let isActive = item.classList.contains("active");
+        listItems.forEach((item) => {
+          item.addEventListener("click", () => {
+            let isActive = item.classList.contains("active");
 
-        listItems.forEach((el) => {
-          el.classList.remove("active");
+            listItems.forEach((el) => {
+              el.classList.remove("active");
+            });
+
+            if (isActive) item.classList.remove("active");
+            else item.classList.add("active");
+          });
         });
 
-        if (isActive) item.classList.remove("active");
-        else item.classList.add("active");
-      });
+        const toggleSidebar = document.querySelector(".toggle-sidebar");
+        const logo = document.querySelector(".logo-box");
+        const sidebar = document.querySelector(".sidebar");
+        const hideToggle = document.getElementById("hide-toggle");
+        const showToggle = document.getElementById("show-toggle");
+
+        // Function to toggle sidebar
+        function toggleSidebarFunction() {
+            if (sidebar && hideToggle && showToggle) {
+                sidebar.classList.toggle("close");
+                
+                // Switch icons based on sidebar state
+                if (sidebar.classList.contains("close")) {
+                    hideToggle.style.display = "none";
+                    showToggle.style.display = "block";
+                } else {
+                    hideToggle.style.display = "block";
+                    showToggle.style.display = "none";
+                }
+            }
+        }
+
+        // Add event listeners
+        if (toggleSidebar) {
+            toggleSidebar.addEventListener("click", toggleSidebarFunction);
+        }
+
+        if (logo) {
+            logo.addEventListener("click", (e) => {
+                e.preventDefault();
+                toggleSidebarFunction();
+            });
+        }
+
+        // Initialize proper icon display
+        if (sidebar && sidebar.classList.contains("close")) {
+            if (hideToggle) hideToggle.style.display = "none";
+            if (showToggle) showToggle.style.display = "block";
+        } else {
+            if (hideToggle) hideToggle.style.display = "block";
+            if (showToggle) showToggle.style.display = "none";
+        }
     });
-
-    const toggleSidebar = document.querySelector(".toggle-sidebar");
-    const logo = document.querySelector(".logo-box");
-    const sidebar = document.querySelector(".sidebar");
-
-    if (toggleSidebar) {
-        toggleSidebar.addEventListener("click", () => {
-          sidebar.classList.toggle("close");
-        });
-    }
-
-    if (logo) {
-        logo.addEventListener("click", () => {
-          sidebar.classList.toggle("close");
-        });
-    }
 </script>
 
 </body>
