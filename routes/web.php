@@ -355,6 +355,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/api/items/{model}', [ModelItemController::class, 'getItemsByModel']);
 
+    Route::get('/api/years/{model}', [ModelItemController::class, 'getYearsByModel']);
+
     Route::get('/master-data/model-items/{model_item}/edit', [Controllers\ModelItemController::class, 'edit'])->name('models.edit');
 
     Route::put('/master-data/model-items/{model_item}', [Controllers\ModelItemController::class, 'update'])->name('models.update');

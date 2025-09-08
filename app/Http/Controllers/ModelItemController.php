@@ -68,6 +68,15 @@ class ModelItemController extends Controller
         return response()->json($items);
     }
 
+    public function getYearsByModel($model)
+    {
+        $years = ModelItem::where('model_code', $model)
+            ->select('model_year')
+            ->distinct()
+            ->pluck('model_year');
+        return response()->json($years);
+    }
+
     /**
      * Display the specified resource.
      */

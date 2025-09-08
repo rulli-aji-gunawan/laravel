@@ -462,18 +462,31 @@
                 if (model) {
                     // Fetch years for selected model
                     fetch(`/api/years/${model}`)
-                        .then(response => response.json())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
                         .then(data => {
                             data.forEach(year => {
                                 let option = new Option(year, year);
                                 yearSelect.add(option);
                             });
                             console.log('Years fetched for model:', data);
+                        })
+                        .catch(error => {
+                            console.error('Error fetching years:', error);
                         });
 
                     // Fetch items for selected model
                     fetch(`/api/items/${model}`)
-                        .then(response => response.json())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
                         .then(data => {
                             data.forEach(item => {
                                 // item harus punya id, model_code, model_year, item_name
@@ -488,6 +501,10 @@
                                 itemSelect.add(option);
                             });
                             console.log('Items fetched for model:', data);
+                        })
+                        .catch(error => {
+                            console.error('Error fetching items:', error);
+                        });
                         });
                 }
             });
