@@ -606,6 +606,31 @@ Route::get('/fix-table-structure', function () {
     }
 });
 
+// Drop model_name column to match manual_setup.sql structure
+Route::get('/drop-model-name', function () {
+    try {
+        // Check if model_name column exists first
+        $columns = DB::select("SHOW COLUMNS FROM model_items LIKE 'model_name'");
+        if (!empty($columns)) {
+            DB::statement("ALTER TABLE model_items DROP COLUMN model_name");
+            return response()->json([
+                'status' => 'success',
+                'message' => 'model_name column dropped successfully'
+            ]);
+        } else {
+            return response()->json([
+                'status' => 'info',
+                'message' => 'model_name column does not exist'
+            ]);
+        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
 // Add model_code column only
 Route::get('/add-model-code', function () {
     try {
@@ -674,7 +699,7 @@ Route::get('/import-correct-data', function () {
         
         $results = [];
         
-        // Insert Model Items with correct structure
+        // Insert Model Items with all required columns
         $modelsInserted = 0;
         $models = [
             ['model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM PERTAMA'],
