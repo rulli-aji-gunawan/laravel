@@ -19,8 +19,32 @@ class ProductionController extends Controller
 {
     public function index()
     {
-        $models = ModelItem::select('model_code')->distinct()->pluck('model_code');
-        return view('input-report.production', compact('models'));
+        try {
+            Log::info('ProductionController@index: Starting');
+            
+            // Check if ModelItem table exists and has data
+            $modelsQuery = ModelItem::select('model_code')->distinct();
+            Log::info('ProductionController@index: Query created');
+            
+            $models = $modelsQuery->pluck('model_code');
+            Log::info('ProductionController@index: Models fetched', ['count' => $models->count()]);
+            
+            // If no models found, return empty collection
+            if ($models->isEmpty()) {
+                Log::warning('ProductionController@index: No models found in database');
+                $models = collect([]);
+            }
+            
+            Log::info('ProductionController@index: Returning view');
+            return view('input-report.production', compact('models'));
+        } catch (Exception $e) {
+            Log::error('Error in ProductionController@index: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            // Return view with empty models on error
+            $models = collect([]);
+            return view('input-report.production', compact('models'));
+        }
     }
 
     public function getYears($model)

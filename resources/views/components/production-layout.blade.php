@@ -1,7 +1,7 @@
-@props(['models', 'years'])
+@props(['models'])
 
 <head>
-    <link rel="stylesheet" href="{{ asset('css/input-production-layout.css') }}">
+    <link rel="stylesheet" href="{{ secure_asset('css/input-production-layout.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </head>
 <!-- ============= Home Section =============== -->
