@@ -564,41 +564,73 @@ Route::get('/test-import', function () {
 // Fix table structure to match manual_setup.sql
 Route::get('/fix-table-structure', function () {
     try {
-        DB::beginTransaction();
-        
         // Add missing columns to model_items table
         $results = [];
         
         // Check if model_code column exists
-        $columns = DB::select("SHOW COLUMNS FROM model_items LIKE 'model_code'");
-        if (empty($columns)) {
-            DB::statement("ALTER TABLE model_items ADD COLUMN model_code VARCHAR(255) AFTER id");
-            $results[] = "Added model_code column";
-        } else {
-            $results[] = "model_code column already exists";
+        try {
+            $columns = DB::select("SHOW COLUMNS FROM model_items LIKE 'model_code'");
+            if (empty($columns)) {
+                DB::statement("ALTER TABLE model_items ADD COLUMN model_code VARCHAR(255) AFTER id");
+                $results[] = "Added model_code column";
+            } else {
+                $results[] = "model_code column already exists";
+            }
+        } catch (\Exception $e) {
+            $results[] = "Error adding model_code: " . $e->getMessage();
         }
         
         // Check if model_year column exists  
-        $columns = DB::select("SHOW COLUMNS FROM model_items LIKE 'model_year'");
-        if (empty($columns)) {
-            DB::statement("ALTER TABLE model_items ADD COLUMN model_year VARCHAR(255) AFTER model_code");
-            $results[] = "Added model_year column";
-        } else {
-            $results[] = "model_year column already exists";
+        try {
+            $columns = DB::select("SHOW COLUMNS FROM model_items LIKE 'model_year'");
+            if (empty($columns)) {
+                DB::statement("ALTER TABLE model_items ADD COLUMN model_year VARCHAR(255) AFTER model_code");
+                $results[] = "Added model_year column";
+            } else {
+                $results[] = "model_year column already exists";
+            }
+        } catch (\Exception $e) {
+            $results[] = "Error adding model_year: " . $e->getMessage();
         }
-        
-        // Rename model_name to model_code if needed (backup approach)
-        // DB::statement("ALTER TABLE model_items CHANGE model_name model_code VARCHAR(255)");
-        
-        DB::commit();
         
         return response()->json([
             'status' => 'success',
-            'message' => 'Table structure updated successfully',
+            'message' => 'Table structure update completed',
             'changes' => $results
         ]);
     } catch (\Exception $e) {
-        DB::rollBack();
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
+// Add model_code column only
+Route::get('/add-model-code', function () {
+    try {
+        DB::statement("ALTER TABLE model_items ADD COLUMN model_code VARCHAR(255) AFTER id");
+        return response()->json([
+            'status' => 'success',
+            'message' => 'model_code column added successfully'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
+// Add model_year column only
+Route::get('/add-model-year', function () {
+    try {
+        DB::statement("ALTER TABLE model_items ADD COLUMN model_year VARCHAR(255) AFTER model_code");
+        return response()->json([
+            'status' => 'success',
+            'message' => 'model_year column added successfully'
+        ]);
+    } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
             'message' => $e->getMessage()
