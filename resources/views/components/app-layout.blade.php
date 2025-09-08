@@ -9,7 +9,100 @@
     <link href='https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>
     <!-- Styles  -->
     {{-- <link rel="shortcut icon" href="kxp_fav.png" type="image/x-icon"> --}}
-    <link rel="stylesheet" href="{{ asset('css/app-layout.css') }}">
+    @if(app()->environment('production'))
+        <link rel="stylesheet" href="{{ secure_asset('css/app-layout.css') }}">
+    @else
+        <link rel="stylesheet" href="{{ asset('css/app-layout.css') }}">
+    @endif
+    
+    <!-- Inline critical CSS backup for Railway -->
+    <style>
+        /* Critical layout styles inline backup */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+        }
+        
+        header {
+            position: fixed;
+            display: flex;
+            top: 0;
+            left: 0;
+            height: 48px;
+            width: 100%;
+            background-color: #1c6d3f;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 48px;
+            left: 0;
+            width: 250px;
+            height: calc(100vh - 48px);
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            z-index: 90;
+        }
+        
+        .sidebar .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar li {
+            border-bottom: 1px solid #eee;
+        }
+        
+        .sidebar a {
+            display: block;
+            padding: 15px 20px;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar a:hover {
+            background: #f0f0f0;
+            color: #1c6d3f;
+        }
+        
+        .welcome {
+            color: white;
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        
+        .logout {
+            margin-left: auto;
+            margin-right: 20px;
+        }
+        
+        .logout a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .logout a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+    </style>
 
 </head>
 
