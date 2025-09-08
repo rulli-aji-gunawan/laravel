@@ -502,6 +502,41 @@ Route::get('/check-migrations', function () {
     }
 });
 
+// Setup admin user route (for initial setup only)
+Route::get('/setup-admin', function () {
+    try {
+        // Create or update admin user
+        $user = App\Models\User::updateOrCreate(
+            ['email' => 'admin@stamping.com'],
+            [
+                'name' => 'Administrator',
+                'email' => 'admin@stamping.com',
+                'password' => Hash::make('admin123'),
+                'is_admin' => true,
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // Also update current logged user to admin if exists
+        if (auth()->check()) {
+            auth()->user()->update(['is_admin' => true]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Admin user created successfully',
+            'admin_email' => 'admin@stamping.com',
+            'admin_password' => 'admin123',
+            'current_user_updated' => auth()->check() ? 'yes' : 'no'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
 // Force migrate specific production tables
 Route::get('/migrate-production-tables', function () {
     try {
