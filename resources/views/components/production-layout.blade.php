@@ -1,4 +1,4 @@
-@props(['models'])
+@props(['models', 'years', 'items'])
 
 <head>
     <link rel="stylesheet" href="{{ secure_asset('css/input-production-layout.css') }}">
@@ -116,6 +116,9 @@
                             <td>
                                 <select name="model_year" id="model_year" required>
                                     <option value="">----</option>
+                                    @foreach ($years as $model_year)
+                                        <option value="{{ $model_year }}">{{ $model_year }}</option>
+                                    @endforeach
                                 </select>
                             </td>
                             <td class="td-right-gen">
@@ -132,6 +135,9 @@
                             <td colspan="3" class="items">
                                 <select name="item_name" id="item_name" required>
                                     <option value="">MODEL-PNL,ITEM NAME</option>
+                                    @foreach ($items as $item_name)
+                                        <option value="{{ $item_name }}">{{ $item_name }}</option>
+                                    @endforeach
                                 </select>
                             </td>
                             <td class="td-right-gen">
