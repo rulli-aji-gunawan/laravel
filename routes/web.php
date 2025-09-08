@@ -271,7 +271,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [Controllers\AuthController::class, 'login'])->name('login');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'admin'])->group(function () {
 
     // Routing for data Users
     Route::resource('users', Controllers\UserController::class);
