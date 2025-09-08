@@ -553,6 +553,180 @@ Route::get('/create-admin', function () {
     }
 });
 
+// Test route
+Route::get('/test-import', function () {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Test route is working'
+    ]);
+});
+
+// Fix table structure to match manual_setup.sql
+Route::get('/fix-table-structure', function () {
+    try {
+        DB::beginTransaction();
+        
+        // Add missing columns to model_items table
+        $results = [];
+        
+        // Check if model_code column exists
+        $columns = DB::select("SHOW COLUMNS FROM model_items LIKE 'model_code'");
+        if (empty($columns)) {
+            DB::statement("ALTER TABLE model_items ADD COLUMN model_code VARCHAR(255) AFTER id");
+            $results[] = "Added model_code column";
+        } else {
+            $results[] = "model_code column already exists";
+        }
+        
+        // Check if model_year column exists  
+        $columns = DB::select("SHOW COLUMNS FROM model_items LIKE 'model_year'");
+        if (empty($columns)) {
+            DB::statement("ALTER TABLE model_items ADD COLUMN model_year VARCHAR(255) AFTER model_code");
+            $results[] = "Added model_year column";
+        } else {
+            $results[] = "model_year column already exists";
+        }
+        
+        // Rename model_name to model_code if needed (backup approach)
+        // DB::statement("ALTER TABLE model_items CHANGE model_name model_code VARCHAR(255)");
+        
+        DB::commit();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Table structure updated successfully',
+            'changes' => $results
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
+// Check table structures
+Route::get('/check-tables', function () {
+    try {
+        $tables = [];
+        
+        // Check model_items table structure
+        $modelItemsColumns = DB::select("DESCRIBE model_items");
+        $tables['model_items'] = $modelItemsColumns;
+        
+        // Check process_names table structure  
+        $processNamesColumns = DB::select("DESCRIBE process_names");
+        $tables['process_names'] = $processNamesColumns;
+        
+        // Check downtime_classifications table structure
+        $downtimeClassColumns = DB::select("DESCRIBE downtime_classifications");
+        $tables['downtime_classifications'] = $downtimeClassColumns;
+        
+        return response()->json([
+            'status' => 'success',
+            'tables' => $tables
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
+// Simple data import route
+Route::get('/setup-data', function () {
+    try {
+        DB::beginTransaction();
+        
+        // Insert Model Items (sesuai struktur Railway: model_name, item_name)
+        $modelsInserted = 0;
+        $models = [
+            ['model_name' => 'FFVV', 'item_name' => 'ITEM PERTAMA'],
+            ['model_name' => 'FFVV', 'item_name' => 'ITEM KEDUA'],
+            ['model_name' => 'FFVV', 'item_name' => 'ITEM KETIGA']
+        ];
+        
+        foreach ($models as $model) {
+            $exists = DB::table('model_items')
+                ->where('model_name', $model['model_name'])
+                ->where('item_name', $model['item_name'])
+                ->exists();
+                
+            if (!$exists) {
+                DB::table('model_items')->insert([
+                    'model_name' => $model['model_name'],
+                    'item_name' => $model['item_name'],
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                $modelsInserted++;
+            }
+        }
+        
+        // Insert Process Names
+        $processesInserted = 0;
+        $processes = [
+            'Line All', 'OP.10', 'OP.20', 'OP.30', 'OP.40'
+        ];
+        
+        foreach ($processes as $process) {
+            $exists = DB::table('process_names')
+                ->where('process_name', $process)
+                ->exists();
+                
+            if (!$exists) {
+                DB::table('process_names')->insert([
+                    'process_name' => $process,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                $processesInserted++;
+            }
+        }
+        
+        // Insert Downtime Classifications
+        $classificationsInserted = 0;
+        $classifications = [
+            'Planned Downtime', 'Gomi', 'Kiriko', 'Dent', 'Scratch', 'Crack', 'Necking', 'Burry', 'Ding'
+        ];
+        
+        foreach ($classifications as $classification) {
+            $exists = DB::table('downtime_classifications')
+                ->where('downtime_classification', $classification)
+                ->exists();
+                
+            if (!$exists) {
+                DB::table('downtime_classifications')->insert([
+                    'downtime_classification' => $classification,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                $classificationsInserted++;
+            }
+        }
+        
+        DB::commit();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data setup completed successfully',
+            'inserted' => [
+                'model_items' => $modelsInserted,
+                'process_names' => $processesInserted,
+                'downtime_classifications' => $classificationsInserted
+            ]
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
 // Check migration status
 Route::get('/check-migrations', function () {
     try {
