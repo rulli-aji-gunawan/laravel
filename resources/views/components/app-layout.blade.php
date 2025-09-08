@@ -14,333 +14,6 @@
     @else
         <link rel="stylesheet" href="{{ asset('css/app-layout.css') }}">
     @endif
-    
-    <!-- Inline critical CSS backup for Railway -->
-    <style>
-        /* Google Fonts */
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-        
-        /* Globals */
-        * {
-            font-family: 'Poppins', sans-serif;
-            font-size: .9rem;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            list-style: none;
-            text-decoration: none;
-        }
-
-        /* Variables */
-        :root {
-            --color_Blue: #3f93f1;
-            --color_Dark1: #1e1e1e;
-            --color_Dark2: #252527;
-            --color_Light1: #dfdfdf;
-            --color_Light2: #c4c4c4;
-            --color_Green1: #1c6d3f;
-            --color_Green2: #449d6b;
-            --color_Green3: #f2f8f4;
-            --color_DarkGreen: darkgreen;
-        }
-
-        /* Header */
-        header {
-            position: fixed;
-            display: flex;
-            top: 0;
-            left: 0;
-            height: 48px;
-            font-size: .8rem;
-            width: 100%;
-            background-color: var(--color_Green1);
-            align-items: center;
-            transition: all .5s ease;
-            z-index: 100;
-            box-shadow: 5px 5px 5px -2px var(--color_Green2);
-        }
-
-        .welcome {
-            flex: 25%;
-            font-size: 14px;
-            color: var(--color_Light1);
-            margin-left: 18px;
-            margin-right: auto;
-            text-align: left;
-        }
-
-        header button {
-            background: none;
-            color: var(--color_Light1);
-            border: 1px solid var(--color_Light2);
-            border-radius: 6px;
-            padding: 2px 5px 2px 5px;
-            font-size: 12px;
-        }
-
-        header form:hover,
-        .link-logout:hover {
-            cursor: pointer;
-            color: yellow;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            position: fixed;
-            top: 48px;
-            left: 0;
-            height: 100%;
-            width: 180px;
-            font-size: .8rem;
-            background-color: var(--color_Green1);
-            transition: all .5s ease;
-            z-index: 100;
-            box-shadow: 5px 2px 5px -2px var(--color_Green2);
-        }
-
-        .sidebar.close {
-            width: 50px;
-        }
-
-        /* Logo */
-        .logo-box {
-            height: 60px;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-items: center;
-            padding: 10px 9px;
-            color: var(--color_Light1);
-            transition: all .5s ease;
-        }
-
-        .logo-box:hover {
-            color: yellow;
-        }
-
-        .logo-box:hover i {
-            border: 2px solid yellow;
-        }
-
-        .logo-box i {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: absolute;
-            font-size: 16px;
-            height: 32px;
-            width: 32px;
-            text-align: center;
-            transition: all .5s ease;
-            border: 2px solid var(--color_Light2);
-            border-radius: 100%;
-        }
-
-        .sidebar.close .logo-box i {
-            display: flex;
-            position: absolute;
-            transform: rotate(-360deg);
-            font-size: 16px;
-            height: 32px;
-            width: 32px;
-            border-radius: 100%;
-        }
-
-        .logo-name {
-            padding-left: 42px;
-            font-size: 1rem;
-            font-weight: 500;
-            min-width: max-content;
-            transition: all .8s ease;
-        }
-
-        /* Sidebar List */
-        .sidebar-list {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            padding: 10px 0px;
-            gap: 12px;
-            overflow: auto;
-        }
-
-        .sidebar-list::-webkit-scrollbar {
-            display: none;
-        }
-
-        .sidebar-list li {
-            transition: all .5s ease;
-        }
-
-        .sidebar-list li:hover {
-            background-color: var(--color_Green2);
-        }
-
-        .sidebar-list li .title {
-            display: flex;
-            align-items: center;
-            transition: all .5s ease;
-            cursor: pointer;
-        }
-
-        .sidebar-list li.active .title {
-            background-color: var(--color_Green2);
-        }
-
-        .sidebar-list li.active .bxs-chevron-down {
-            transition: all .5s ease;
-            transform: rotate(180deg);
-        }
-
-        .sidebar-list li .title .link {
-            display: flex;
-            align-items: center;
-        }
-
-        .sidebar-list li .title i {
-            height: 50px;
-            min-width: 50px;
-            text-align: center;
-            line-height: 50px;
-            color: var(--color_Light1);
-            font-size: 18px;
-        }
-
-        .sidebar-list li .title .name {
-            color: var(--color_Light1);
-        }
-
-        /* Submenu */
-        .sidebar-list li .submenu {
-            width: 0;
-            height: 0;
-            opacity: 0;
-            transition-property: width;
-            transition-duration: 2s;
-            transition-timing-function: linear;
-        }
-
-        .submenu .submenu-title {
-            font-weight: 500;
-        }
-
-        .sidebar-list li.dropdown.active .submenu {
-            opacity: 1;
-            width: unset;
-            height: unset;
-            display: flex;
-            flex-direction: column;
-            padding: 4px 4px 12px 56px;
-            background-color: var(--color_Green2);
-            transition: all .5s ease;
-        }
-
-        .submenu .link {
-            color: var(--color_Light1);
-            padding: 5px 0;
-            transition: all .5s ease;
-        }
-
-        .submenu .link:hover {
-            color: yellow;
-        }
-
-        .submenu-title {
-            display: none;
-        }
-
-        /* Submenu Close */
-        .sidebar.close .logo-name,
-        .sidebar.close .title .name,
-        .sidebar.close .title .bxs-chevron-down {
-            display: none;
-        }
-
-        .sidebar.close .sidebar-list {
-            overflow: visible;
-        }
-
-        .sidebar.close .sidebar-list li {
-            position: relative;
-        }
-
-        .sidebar.close .sidebar-list li .submenu {
-            display: flex;
-            flex-direction: column;
-            position: absolute;
-            left: 100%;
-            margin-top: 0;
-            padding: 10px 20px;
-            border-radius: 0 6px 6px 0;
-            height: max-content;
-            width: max-content;
-            opacity: 0;
-            transition: all .5s ease;
-            pointer-events: none;
-        }
-
-        .sidebar.close .sidebar-list li:hover .submenu {
-            opacity: 1;
-            top: 0px;
-            min-height: 50px;
-            pointer-events: initial;
-            background-color: var(--color_Green2);
-            transition: all .5s ease;
-            animation-name: slide-right;
-            animation-duration: 1.5s;
-        }
-
-        @keyframes slide-right {
-            0% {
-                left: 14px;
-                top: 0px;
-            }
-            25% {
-                left: 50px;
-                top: 0px;
-            }
-        }
-
-        .sidebar.close .submenu-title {
-            display: block;
-            margin-top: 6px;
-            font-style: 16px;
-            color: yellow;
-        }
-
-        /* Home Section */
-        .home {
-            position: relative;
-            left: 180px;
-            width: calc(100% - 180px);
-            transition: all .5s ease;
-            opacity: 1;
-        }
-
-        .sidebar.close~.home {
-            left: 50px;
-            width: calc(100% - 50px);
-        }
-
-        /* Logout styling */
-        .logout {
-            margin-left: auto;
-            margin-right: 20px;
-        }
-        
-        .logout a {
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-        
-        .logout a:hover {
-            background: rgba(255,255,255,0.1);
-        }
-    </style>
 
 </head>
 
@@ -453,6 +126,13 @@
         </ul>
     </div>
 
+    <!-- Home Section with Toggle Button (sesuai CSS asli) -->
+    <section class="home">
+        <div class="toggle-sidebar">
+            <i class='bx bx-x-circle' id="hide-toggle"></i>
+            <i class='bx bx-menu' id="show-toggle"></i>
+        </div>
+    </section>
 
 </body>
 
@@ -484,16 +164,16 @@
     });
 </script>
 
-<!-- Sidebar JavaScript -->
+<!-- Load JavaScript app.js (sesuai dengan JS asli) -->
 @if(app()->environment('production'))
-    <script src="{{ secure_asset('js/sidebar.js') }}"></script>
+    <script src="{{ secure_asset('js/app.js') }}"></script>
 @else
-    <script src="{{ asset('js/sidebar.js') }}"></script>
+    <script src="{{ asset('js/app.js') }}"></script>
 @endif
 
-<!-- Inline sidebar JavaScript backup -->
+<!-- Inline JavaScript backup (copy dari app.js asli) -->
 <script>
-    // Sidebar functionality inline backup
+    // Sidebar functionality sesuai app.js asli
     const listItems = document.querySelectorAll(".sidebar-list li");
 
     listItems.forEach((item) => {
