@@ -108,6 +108,62 @@ Route::get('/test-user', function () {
     }
 });
 
+// Debug API endpoints for model items
+Route::get('/debug-api-models', function () {
+    try {
+        $models = \App\Models\ModelItem::select('model_code')->distinct()->pluck('model_code');
+        return response()->json([
+            'status' => 'success',
+            'models' => $models,
+            'count' => $models->count()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
+Route::get('/debug-api-years/{model}', function ($model) {
+    try {
+        $years = \App\Models\ModelItem::where('model_code', $model)
+            ->select('model_year')
+            ->distinct()
+            ->pluck('model_year');
+        return response()->json([
+            'status' => 'success',
+            'model' => $model,
+            'years' => $years,
+            'count' => $years->count()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
+Route::get('/debug-api-items/{model}', function ($model) {
+    try {
+        $items = \App\Models\ModelItem::where('model_code', $model)
+            ->select('id', 'model_code', 'item_name', 'product_picture')
+            ->get();
+        return response()->json([
+            'status' => 'success',
+            'model' => $model,
+            'items' => $items,
+            'count' => $items->count()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
 // Manual migration trigger
 Route::get('/run-migration', function () {
     try {
