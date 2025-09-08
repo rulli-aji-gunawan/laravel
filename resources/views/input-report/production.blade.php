@@ -4,8 +4,6 @@
 
 <x-production-layout :models="$models" :years="$years" :items="$items"></x-production-layout>
 
-<script src="{{ secure_asset('js/input-qty.js') }}"></script>
-<script src="{{ secure_asset('js/sidebar.js') }}"></script>
 <script src="{{ secure_asset('js/prod-tbl-row.js') }}"></script>
 
 @if (session('success'))
