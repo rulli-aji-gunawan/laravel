@@ -1,7 +1,7 @@
 <x-app-layout>Dashboard Manufacturing Stamping</x-app-layout>
 
 <head>
-    <link rel="stylesheet" href="../css/dashboard-layout.css">
+    <link rel="stylesheet" href="{{ asset('css/dashboard-layout.css') }}">
     <link rel="stylesheet" href="{{ asset('css/input-production-layout.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -231,4 +231,4 @@
 
 </section>
 
-<script src="../js/sidebar.js"></script>
+    <script src="{{ asset('js/sidebar.js') }}"></script>

@@ -9,7 +9,7 @@
     <link href='https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>
     <!-- Styles  -->
     {{-- <link rel="shortcut icon" href="kxp_fav.png" type="image/x-icon"> --}}
-    <link rel="stylesheet" href={{ asset('css/app-layout.css') }}>
+    <link rel="stylesheet" href="{{ asset('css/app-layout.css') }}">
 
 </head>
 
