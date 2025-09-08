@@ -35,15 +35,22 @@ class ProductionController extends Controller
                 $models = collect([]);
             }
             
+            // Initialize empty collections for years and items
+            // These will be populated dynamically via AJAX when model is selected
+            $years = collect([]);
+            $items = collect([]);
+            
             Log::info('ProductionController@index: Returning view');
-            return view('input-report.production', compact('models'));
+            return view('input-report.production', compact('models', 'years', 'items'));
         } catch (Exception $e) {
             Log::error('Error in ProductionController@index: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
             
-            // Return view with empty models on error
+            // Return view with empty collections on error
             $models = collect([]);
-            return view('input-report.production', compact('models'));
+            $years = collect([]);
+            $items = collect([]);
+            return view('input-report.production', compact('models', 'years', 'items'));
         }
     }
 
