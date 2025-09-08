@@ -19,39 +19,10 @@ class ProductionController extends Controller
 {
     public function index()
     {
-        try {
-            Log::info('ProductionController@index: Starting');
-            
-            // Check if ModelItem table exists and has data
-            $modelsQuery = ModelItem::select('model_code')->distinct();
-            Log::info('ProductionController@index: Query created');
-            
-            $models = $modelsQuery->pluck('model_code');
-            Log::info('ProductionController@index: Models fetched', ['count' => $models->count()]);
-            
-            // If no models found, return empty collection
-            if ($models->isEmpty()) {
-                Log::warning('ProductionController@index: No models found in database');
-                $models = collect([]);
-            }
-            
-            // Initialize empty collections for years and items
-            // These will be populated dynamically via AJAX when model is selected
-            $years = collect([]);
-            $items = collect([]);
-            
-            Log::info('ProductionController@index: Returning view');
-            return view('input-report.production', compact('models', 'years', 'items'));
-        } catch (Exception $e) {
-            Log::error('Error in ProductionController@index: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            
-            // Return view with empty collections on error
-            $models = collect([]);
-            $years = collect([]);
-            $items = collect([]);
-            return view('input-report.production', compact('models', 'years', 'items'));
-        }
+        $models = ModelItem::select('model_code')->distinct()->pluck('model_code');
+        $years = collect([]); // Empty initially, populated via AJAX
+        $items = collect([]); // Empty initially, populated via AJAX
+        return view('input-report.production', compact('models', 'years', 'items'));
     }
 
     public function getYears($model)

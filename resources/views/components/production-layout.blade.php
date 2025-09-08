@@ -1,4 +1,4 @@
-@props(['models', 'years'])
+@props(['models', 'years', 'items'])
 
 <head>
     <link rel="stylesheet" href="{{ asset('css/input-production-layout.css') }}">
