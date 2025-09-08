@@ -40,7 +40,7 @@
             {{-- <label for="fyFilter">FY: </label> --}}
             <select id="fyFilter">
                 <option value="all" {{ request('fy') == 'all' ? 'selected' : '' }}>All FY</option>
-                @foreach (array_unique(array_map(fn($d) => 'FY' . substr(explode('-', $d['fy_n'])[0], -2), $chartData->toArray())) as $fy)
+                @foreach (array_unique(array_map(fn($d) => 'FY' . substr(explode('-', $d['fy_n'] ?? 'FY25-1')[0], -2), $chartData->toArray())) as $fy)
                     <option value="{{ $fy }}" {{ $fy == $currentFY ? 'selected' : '' }}>
                         {{ $fy }}</option>
                 @endforeach
@@ -52,9 +52,12 @@
                 <option value="all">All Month</option>
                 @php
                     $months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+                    $monthNames = [];
                     foreach ($chartData as $data) {
-                        $monthIndex = (intval(explode('-', $data['fy_n'])[1]) - 1) % 12;
-                        $monthNames[$monthIndex] = $months[$monthIndex];
+                        if (isset($data['fy_n']) && !empty($data['fy_n']) && strpos($data['fy_n'], '-') !== false) {
+                            $monthIndex = (intval(explode('-', $data['fy_n'])[1]) - 1) % 12;
+                            $monthNames[$monthIndex] = $months[$monthIndex];
+                        }
                     }
                     ksort($monthNames);
                 @endphp
@@ -73,7 +76,7 @@
             <select id="shiftFilter">
                 <option value="all">All Shift</option>
                 @foreach (array_unique(array_column($chartData->toArray(), 'shift')) as $shift)
-                    @if ($shift)
+                    @if ($shift && !empty($shift))
                         <option value="{{ $shift }}">{{ $shift }}</option>
                     @endif
                 @endforeach
@@ -84,7 +87,7 @@
             <select id="modelFilter">
                 <option value="all">All Model</option>
                 @foreach (array_unique(array_column($chartData->toArray(), 'model')) as $model)
-                    @if ($model)
+                    @if ($model && !empty($model))
                         <option value="{{ $model }}">{{ $model }}</option>
                     @endif
                 @endforeach
@@ -95,7 +98,7 @@
             <select id="itemFilter">
                 <option value="all">All Item Name</option>
                 @foreach (array_unique(array_column($chartData->toArray(), 'item_name')) as $item)
-                    @if ($item)
+                    @if ($item && !empty($item))
                         <option value="{{ $item }}">{{ $item }}</option>
                     @endif
                 @endforeach
@@ -106,7 +109,7 @@
             <select id="lineFilter">
                 <option value="all">All Line</option>
                 @foreach (array_unique(array_column($chartData->toArray(), 'line')) as $line)
-                    @if ($line)
+                    @if ($line && !empty($line))
                         <option value="{{ $line }}">{{ $line }}</option>
                     @endif
                 @endforeach
@@ -117,7 +120,7 @@
             <select id="groupFilter">
                 <option value="all">All Group</option>
                 @foreach (array_unique(array_column($chartData->toArray(), 'group')) as $group)
-                    @if ($group)
+                    @if ($group && !empty($group))
                         <option value="{{ $group }}">{{ $group }}</option>
                     @endif
                 @endforeach
@@ -125,6 +128,7 @@
         </div>
     </div>
     <div class="dashboard-container">
+        @if(count($chartData) > 0)
         <div class="home-content">
             <canvas id="sphChart"></canvas>
         </div>
@@ -143,6 +147,12 @@
         <div class="home-content">
             <canvas id="srChart"></canvas>
         </div>
+        @else
+        <div class="home-content" style="text-align: center; padding: 50px;">
+            <h3>No Production Data Available</h3>
+            <p>Please import production data or add new production records.</p>
+        </div>
+        @endif
     </div>
 
     {{-- <script src="../js/prod-tbl-row.js"></script> --}}
@@ -167,12 +177,16 @@
     <script src="{{ asset('js/defect-chart.js') }}"></script>
 
     <script>
+        @if(count($chartData) > 0)
         window.initSPHDashboardChart(@json($chartData), '{{ $currentFY }}');
         window.initORDashboardChart(@json($chartData), '{{ $currentFY }}');
         window.initFTCDashboardChart(@json($chartData), '{{ $currentFY }}');
         window.initRRDashboardChart(@json($chartData), '{{ $currentFY }}');
         window.initSRDashboardChart(@json($chartData), '{{ $currentFY }}');
         window.initDefectChart(@json($defectData), '{{ $currentFY }}');
+        @else
+        console.log('No chart data available');
+        @endif
 
         document.getElementById('clearDateFilter').addEventListener('click', function() {
             document.getElementById('dateFilter').value = '';
@@ -180,6 +194,7 @@
         });
 
         function updateAllFilters() {
+            @if(count($chartData) > 0)
             const fyFilter = document.getElementById('fyFilter').value;
             const modelFilter = document.getElementById('modelFilter').value;
             const itemFilter = document.getElementById('itemFilter').value;
@@ -201,14 +216,17 @@
                 lineFilter, groupFilter);
             window.updateDefectChart(fyFilter, modelFilter, itemFilter, monthFilter, dateFilter, shiftFilter, lineFilter,
                 groupFilter);
+            @endif
         }
 
         // Tambahkan event listener untuk semua filter
+        @if(count($chartData) > 0)
         document.querySelectorAll(
                 '#fyFilter, #modelFilter, #itemFilter, #monthFilter, #dateFilter, #shiftFilter, #lineFilter, #groupFilter')
             .forEach(filter => {
                 filter.addEventListener('change', updateAllFilters);
             });
+        @endif
     </script>
 
 </section>

@@ -24,6 +24,10 @@ class ImportProductionData extends Command
         $this->info('Starting production data import...');
 
         try {
+            // Test database connection first
+            DB::connection()->getPdo();
+            $this->info('✓ Database connection successful');
+
             DB::beginTransaction();
 
             // Import Users
@@ -42,9 +46,10 @@ class ImportProductionData extends Command
             DB::commit();
             $this->info('Production data import completed successfully!');
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             $this->error('Import failed: ' . $e->getMessage());
+            $this->error('Stack trace: ' . $e->getTraceAsString());
             return 1;
         }
 
