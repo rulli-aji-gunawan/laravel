@@ -458,6 +458,63 @@ Route::get('/debug-dashboard', function () {
     }
 });
 
+// Import sample data from manual_setup.sql
+Route::get('/import-sample-data', function () {
+    try {
+        DB::beginTransaction();
+        
+        // Insert Admin User
+        DB::statement("INSERT IGNORE INTO users (id, name, email, password, is_admin, created_at, updated_at) VALUES 
+            (1, 'Admin User', 'admin@email.com', '\$2y\$12\$OiP2UF66w5DyZ2aomWPU3.bjeskEnr5HSs9dahYbVTXfCX/njCHae', 1, NOW(), NOW())");
+
+        // Insert Model Items
+        DB::statement("INSERT IGNORE INTO model_items (id, model_code, model_year, item_name, created_at, updated_at) VALUES 
+            (1, 'FFVV', '2026', 'ITEM PERTAMA', NOW(), NOW()),
+            (2, 'FFVV', '2026', 'ITEM KEDUA', NOW(), NOW()),
+            (3, 'FFVV', '2026', 'ITEM KETIGA', NOW(), NOW())");
+
+        // Insert Downtime Classifications
+        DB::statement("INSERT IGNORE INTO downtime_classifications (id, downtime_classification, created_at, updated_at) VALUES 
+            (1, 'Planned Downtime', NOW(), NOW()),
+            (2, 'Gomi', NOW(), NOW()),
+            (3, 'Kiriko', NOW(), NOW()),
+            (5, 'Dent', NOW(), NOW()),
+            (6, 'Scratch', NOW(), NOW()),
+            (7, 'Crack', NOW(), NOW()),
+            (8, 'Necking', NOW(), NOW()),
+            (9, 'Burry', NOW(), NOW()),
+            (10, 'Ding', NOW(), NOW())");
+
+        // Insert Process Names
+        DB::statement("INSERT IGNORE INTO process_names (id, process_name, created_at, updated_at) VALUES 
+            (1, 'Line All', NOW(), NOW()),
+            (16, 'OP.10', NOW(), NOW()),
+            (18, 'OP.20', NOW(), NOW()),
+            (20, 'OP.30', NOW(), NOW()),
+            (22, 'OP.40', NOW(), NOW())");
+
+        DB::commit();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Sample data imported successfully',
+            'imported' => [
+                'users' => 1,
+                'model_items' => 3,
+                'downtime_classifications' => 9,
+                'process_names' => 5
+            ]
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
 // Check migration status
 Route::get('/check-migrations', function () {
     try {
