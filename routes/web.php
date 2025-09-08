@@ -360,6 +360,13 @@ Route::middleware('auth', 'web')->group(function () {
 
     Route::post('/input-report/production', [Controllers\ProductionController::class, 'store'])
         ->name('input.production');
+
+    // Temporary master-data routes without admin middleware for testing
+    Route::get('/master-data/user', [Controllers\UserController::class, 'index'])->name('users.temp');
+    Route::get('/master-data/model-items', [Controllers\ModelItemController::class, 'index'])->name('models.temp');
+    Route::get('/master-data/process-name', [Controllers\ProcessNameController::class, 'index'])->name('process.temp');
+    Route::get('/master-data/downtime-category', [Controllers\DowntimeCategoryController::class, 'index'])->name('downtime_categories.temp');
+    Route::get('/master-data/downtime-classification', [Controllers\DowntimeClassificationController::class, 'index'])->name('dt_classifications.temp');
     // ->middleware('web');
 
     Route::get('/master-data/process-name/all', [Controllers\ProcessNameController::class, 'getAll'])->name('process.getAll');
@@ -505,17 +512,25 @@ Route::get('/check-migrations', function () {
 // Setup admin user route (for initial setup only)
 Route::get('/setup-admin', function () {
     try {
-        // Create or update admin user
-        $user = App\Models\User::updateOrCreate(
-            ['email' => 'admin@stamping.com'],
-            [
-                'name' => 'Administrator',
-                'email' => 'admin@stamping.com',
-                'password' => Hash::make('admin123'),
-                'is_admin' => true,
-                'email_verified_at' => now(),
-            ]
-        );
+        // Create admin user
+        $adminUser = new App\Models\User();
+        $adminUser->name = 'Administrator';
+        $adminUser->email = 'admin@stamping.com';
+        $adminUser->password = Hash::make('admin123');
+        $adminUser->is_admin = true;
+        $adminUser->email_verified_at = now();
+        
+        // Check if user exists
+        $existingUser = App\Models\User::where('email', 'admin@stamping.com')->first();
+        
+        if ($existingUser) {
+            $existingUser->is_admin = true;
+            $existingUser->save();
+            $message = 'Admin user updated successfully';
+        } else {
+            $adminUser->save();
+            $message = 'Admin user created successfully';
+        }
 
         // Also update current logged user to admin if exists
         if (auth()->check()) {
@@ -524,7 +539,7 @@ Route::get('/setup-admin', function () {
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Admin user created successfully',
+            'message' => $message,
             'admin_email' => 'admin@stamping.com',
             'admin_password' => 'admin123',
             'current_user_updated' => auth()->check() ? 'yes' : 'no'
@@ -532,9 +547,15 @@ Route::get('/setup-admin', function () {
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
-            'message' => $e->getMessage()
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ]);
     }
+});
+
+// Simple admin setup route
+Route::get('/admin-setup', function () {
+    return "Admin setup route is working. Use /setup-admin for actual setup.";
 });
 
 // Force migrate specific production tables
