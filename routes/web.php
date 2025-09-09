@@ -418,23 +418,70 @@ Route::get('/fix-downtime-categories', function () {
         }
         
         // Extract only downtime_categories INSERT statement
-        if (preg_match('/INSERT INTO `downtime_categories`[^;]+;/is', $sql, $matches)) {
+        if (preg_match('/INSERT INTO `downtime_categories` VALUES[^;]+;/is', $sql, $matches)) {
             $insertStatement = $matches[0];
             
-            // The original data format: (id, downtime_name, downtime_type, remember_token, created_at, updated_at)
-            // Convert to match our new structure (remove remember_token column)
-            $statement = preg_replace('/^INSERT\s+INTO/i', 'INSERT IGNORE INTO', $insertStatement);
+            // The original data format has 6 columns: (id, downtime_name, downtime_type, remember_token, created_at, updated_at)
+            // We need to remove the 4th column (remember_token which is NULL)
             
-            // Parse the VALUES part and reformat
-            if (preg_match('/VALUES\s+(.+);/', $statement, $valueMatches)) {
+            // Extract the VALUES part
+            if (preg_match('/VALUES\s+(.+);/', $insertStatement, $valueMatches)) {
                 $valuesString = $valueMatches[1];
                 
-                // Convert old format to new format by removing 4th column (remember_token)
-                $statement = "INSERT IGNORE INTO `downtime_categories` (`id`, `downtime_name`, `downtime_type`, `created_at`, `updated_at`) VALUES " . $valuesString;
+                // Parse each tuple and remove the 4th element (remember_token)
+                $cleanedTuples = [];
                 
-                DB::statement($statement);
-                $success = true;
-                $message = "Downtime categories table fixed and data imported successfully";
+                // Split by ),( to get individual tuples
+                $tuples = preg_split('/\),\s*\(/', $valuesString);
+                
+                foreach ($tuples as $i => $tuple) {
+                    // Clean up the tuple
+                    $tuple = trim($tuple, '()');
+                    
+                    // Split by comma but be careful with quoted strings
+                    $parts = [];
+                    $inQuotes = false;
+                    $current = '';
+                    $quoteChar = '';
+                    
+                    for ($j = 0; $j < strlen($tuple); $j++) {
+                        $char = $tuple[$j];
+                        
+                        if (!$inQuotes && ($char === "'" || $char === '"')) {
+                            $inQuotes = true;
+                            $quoteChar = $char;
+                            $current .= $char;
+                        } elseif ($inQuotes && $char === $quoteChar && ($j === 0 || $tuple[$j-1] !== '\\')) {
+                            $inQuotes = false;
+                            $current .= $char;
+                        } elseif (!$inQuotes && $char === ',') {
+                            $parts[] = trim($current);
+                            $current = '';
+                        } else {
+                            $current .= $char;
+                        }
+                    }
+                    if ($current) {
+                        $parts[] = trim($current);
+                    }
+                    
+                    // Remove the 4th element (remember_token at index 3)
+                    if (count($parts) >= 6) {
+                        unset($parts[3]); // Remove remember_token
+                        $cleanedTuples[] = '(' . implode(',', array_values($parts)) . ')';
+                    }
+                }
+                
+                if (!empty($cleanedTuples)) {
+                    $newStatement = "INSERT IGNORE INTO `downtime_categories` (`id`, `downtime_name`, `downtime_type`, `created_at`, `updated_at`) VALUES " . implode(',', $cleanedTuples) . ";";
+                    
+                    DB::statement($newStatement);
+                    $success = true;
+                    $message = "Downtime categories table fixed and data imported successfully";
+                } else {
+                    $success = false;
+                    $message = "Could not parse tuples from VALUES";
+                }
             } else {
                 $success = false;
                 $message = "Could not parse VALUES from INSERT statement";
