@@ -342,6 +342,53 @@ Route::get('/import-original-data', function () {
     }
 });
 
+// Check what data has been imported
+Route::get('/check-imported-data', function () {
+    try {
+        $results = [];
+        
+        // Check key tables for data
+        $tables = [
+            'users',
+            'model_items', 
+            'process_names',
+            'downtime_categories',
+            'downtime_classifications',
+            'table_productions',
+            'table_downtimes',
+            'table_defects'
+        ];
+        
+        foreach ($tables as $table) {
+            try {
+                $count = DB::table($table)->count();
+                $sample = DB::table($table)->limit(2)->get();
+                
+                $results[$table] = [
+                    'count' => $count,
+                    'sample_data' => $sample->toArray()
+                ];
+            } catch (\Exception $e) {
+                $results[$table] = [
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data check completed',
+            'tables' => $results
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to check data: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
 // Alternative: Import from simpler local_data_export.sql
 Route::get('/import-simple-data', function () {
     try {
