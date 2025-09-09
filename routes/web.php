@@ -180,6 +180,21 @@ Route::get('/import-original-data', function () {
             throw new Exception("SQL file is empty or could not be read");
         }
         
+        // Fix encoding issues - convert to UTF-8 if needed
+        if (!mb_check_encoding($sql, 'UTF-8')) {
+            // Try to detect encoding and convert
+            $encoding = mb_detect_encoding($sql, ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'], true);
+            if ($encoding && $encoding !== 'UTF-8') {
+                $sql = mb_convert_encoding($sql, 'UTF-8', $encoding);
+            } else {
+                // Force UTF-8 encoding, removing invalid characters
+                $sql = mb_convert_encoding($sql, 'UTF-8', 'UTF-8');
+            }
+        }
+        
+        // Clean any remaining problematic characters
+        $sql = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $sql);
+        
         // Extract INSERT statements using regex
         preg_match_all('/INSERT\s+INTO\s+[^;]+;/is', $sql, $matches);
         $insertStatements = $matches[0];
@@ -282,18 +297,35 @@ Route::get('/import-original-data', function () {
         
         DB::commit();
         
+        // Clean data for JSON response to avoid encoding issues
+        $cleanErrors = array_map(function($error) {
+            return [
+                'index' => $error['index'] ?? null,
+                'table' => mb_convert_encoding($error['table'] ?? 'unknown', 'UTF-8', 'UTF-8'),
+                'statement' => mb_convert_encoding(substr($error['statement'] ?? '', 0, 100), 'UTF-8', 'UTF-8'),
+                'error' => mb_convert_encoding($error['error'] ?? '', 'UTF-8', 'UTF-8')
+            ];
+        }, array_slice($errors, 0, 5));
+        
+        $cleanDebugInfo = array_map(function($debug) {
+            return [
+                'table' => mb_convert_encoding($debug['table'] ?? 'unknown', 'UTF-8', 'UTF-8'),
+                'statement_preview' => mb_convert_encoding($debug['statement_preview'] ?? '', 'UTF-8', 'UTF-8')
+            ];
+        }, array_slice($debugInfo, 0, 3));
+        
         return response()->json([
             'status' => 'success',
             'message' => 'Original data imported successfully',
             'successful_statements' => $successCount,
             'failed_statements' => $errorCount,
             'data_imported' => $dataImported,
-            'errors' => array_slice($errors, 0, 5), // Only show first 5 errors
+            'errors' => $cleanErrors,
             'total_insert_statements_found' => count($insertStatements),
-            'debug_sample' => array_slice($debugInfo, 0, 3), // Show first 3 for debugging
+            'debug_sample' => $cleanDebugInfo,
             'debug_info' => [
                 'manual_insert_count' => $manualInsertCount ?? 0,
-                'sql_substring' => substr($sqlSubstring ?? '', 0, 200),
+                'sql_substring' => mb_convert_encoding(substr($sqlSubstring ?? '', 0, 200), 'UTF-8', 'UTF-8'),
                 'file_size' => strlen($sql),
                 'has_insert_text' => strpos($sql, 'INSERT INTO') !== false ? 'yes' : 'no'
             ]
@@ -303,7 +335,7 @@ Route::get('/import-original-data', function () {
         DB::rollback();
         return response()->json([
             'status' => 'error',
-            'message' => 'Failed to import original data: ' . $e->getMessage(),
+            'message' => 'Failed to import original data: ' . mb_convert_encoding($e->getMessage(), 'UTF-8', 'UTF-8'),
             'line' => $e->getLine(),
             'file' => basename($e->getFile())
         ], 500);
