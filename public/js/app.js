@@ -22,13 +22,18 @@ const toggleSidebar = document.querySelector(".toggle-sidebar");
 const logo = document.querySelector(".logo-box");
 const sidebar = document.querySelector(".sidebar");
 
-toggleSidebar.addEventListener("click", () => {
-  sidebar.classList.toggle("close");
-});
+// Null check untuk mencegah error
+if (toggleSidebar && sidebar) {
+    toggleSidebar.addEventListener("click", () => {
+      sidebar.classList.toggle("close");
+    });
+}
 
-logo.addEventListener("click", () => {
-  sidebar.classList.toggle("close");
-});
+if (logo && sidebar) {
+    logo.addEventListener("click", () => {
+      sidebar.classList.toggle("close");
+    });
+}
 
 const inputQty = document.querySelector(".input-qty");
 function limitInputLength(inputQty, maxLength) {
