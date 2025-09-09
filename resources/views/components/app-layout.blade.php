@@ -134,40 +134,42 @@
         </div>
     </section>
 
-    <!-- JavaScript di dalam body -->
-    <script>
-        // Mendeteksi apakah session masih aktif sebelum melakukan proses logout
-        document.getElementById('link-logout').addEventListener('submit', function(e) {
-            // Cek apakah user masih terautentikasi
-            fetch('/api/check-auth', {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.authenticated) {
-                    // Jika tidak terautentikasi, batalkan form submission dan redirect ke home
-                    e.preventDefault();
-                    window.location.href = '/';
-                }
-                // Jika terautentikasi, biarkan form submit berjalan normal
-            })
-            .catch(() => {
-                // Jika terjadi error, arahkan ke home
+</body>
+
+
+// Mendeteksi apakah session masih aktif sebelum melakukan proses logout
+<script>
+    document.getElementById('link-logout').addEventListener('submit', function(e) {
+        // Cek apakah user masih terautentikasi
+        fetch('/api/check-auth', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.authenticated) {
+                // Jika tidak terautentikasi, batalkan form submission dan redirect ke home
                 e.preventDefault();
                 window.location.href = '/';
-            });
+            }
+            // Jika terautentikasi, biarkan form submit berjalan normal
+        })
+        .catch(() => {
+            // Jika terjadi error, arahkan ke home
+            e.preventDefault();
+            window.location.href = '/';
         });
-    </script>
+    });
+</script>
 
-    <!-- Load JavaScript app.js -->
-    @if(app()->environment('production'))
-        <script src="{{ secure_asset('js/app.js') }}"></script>
-    @else
-        <script src="{{ asset('js/app.js') }}"></script>
-    @endif
+<!-- Load JavaScript app.js -->
+@if(app()->environment('production'))
+    <script src="{{ secure_asset('js/app.js') }}"></script>
+@else
+    <script src="{{ asset('js/app.js') }}"></script>
+@endif
 
 </body>
 

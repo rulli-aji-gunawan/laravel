@@ -23,7 +23,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
-    margin-top: 48px;
+    margin-top: 56px;
     justify-content: center;
     /* border: solid 1px var(--color_Light2); */
 }
