@@ -60,6 +60,35 @@ Route::get('/test-db-simple', function () {
     }
 });
 
+// API untuk mendapatkan years berdasarkan model (accessible by logged in users)
+Route::get('/years/{model}', function ($model) {
+    try {
+        $years = DB::table('model_items')
+            ->where('model_code', $model)
+            ->distinct()
+            ->pluck('model_year')
+            ->toArray();
+        
+        return response()->json($years);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+})->middleware('auth');
+
+// API untuk mendapatkan items berdasarkan model (accessible by logged in users)
+Route::get('/items/{model}', function ($model) {
+    try {
+        $items = DB::table('model_items')
+            ->where('model_code', $model)
+            ->select('id', 'model_code', 'model_year', 'item_name', 'product_picture')
+            ->get();
+        
+        return response()->json($items);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+})->middleware('auth');
+
 // Check database tables
 Route::get('/check-tables', function () {
     try {

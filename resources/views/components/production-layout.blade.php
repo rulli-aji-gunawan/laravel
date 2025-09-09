@@ -461,7 +461,7 @@
 
                 if (model) {
                     // Fetch years for selected model
-                    fetch(`/api/years/${model}`)
+                    fetch(`/years/${model}`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -480,7 +480,7 @@
                         });
 
                     // Fetch items for selected model
-                    fetch(`/api/items/${model}`)
+                    fetch(`/items/${model}`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error(`HTTP error! status: ${response.status}`);
