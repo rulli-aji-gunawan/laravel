@@ -566,6 +566,65 @@ Route::get('/insert-downtime-categories-manual', function () {
     }
 });
 
+// Fix model_items data - import all 20 records manually
+Route::get('/fix-model-items', function () {
+    try {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        
+        // Clear existing data
+        DB::table('model_items')->truncate();
+        
+        // Insert all model_items data manually (removing deleted_at column)
+        $items = [
+            ['id' => 1, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM PERTAMA', 'product_picture' => '1.FFVV.2026.ITEM PERTAMA.jpg', 'created_at' => '2024-08-04 16:37:08', 'updated_at' => '2025-07-17 23:00:16'],
+            ['id' => 2, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KEDUA', 'product_picture' => '2.FFVV.2026.ITEM KEDUA.jpg', 'created_at' => '2024-08-04 22:47:11', 'updated_at' => '2025-07-17 23:00:37'],
+            ['id' => 3, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KETIGA', 'product_picture' => '3.FFVV.2026.ITEM KETIGA.jpg', 'created_at' => '2024-08-04 22:47:35', 'updated_at' => '2025-07-17 23:44:08'],
+            ['id' => 4, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KEEMPAT', 'product_picture' => '4.FFVV.2026.ITEM KEEMPAT.jpg', 'created_at' => '2024-08-04 22:56:10', 'updated_at' => '2025-07-17 23:51:09'],
+            ['id' => 5, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KELIMA', 'product_picture' => '5.FFVV.2026.ITEM KELIMA.jpg', 'created_at' => '2024-08-04 22:57:48', 'updated_at' => '2025-07-17 23:53:18'],
+            ['id' => 6, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KEENAM', 'product_picture' => '6.FFVV.2026.ITEM KEENAM.jpg', 'created_at' => '2024-08-04 22:58:30', 'updated_at' => '2025-07-18 16:44:39'],
+            ['id' => 7, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KETUJUH', 'product_picture' => null, 'created_at' => '2024-08-04 22:59:57', 'updated_at' => '2024-08-04 23:00:03'],
+            ['id' => 8, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KEDELAPAN', 'product_picture' => null, 'created_at' => '2024-08-04 23:00:35', 'updated_at' => '2024-08-04 23:00:45'],
+            ['id' => 9, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KESEMBILAN', 'product_picture' => null, 'created_at' => '2024-08-05 15:16:51', 'updated_at' => '2024-08-05 15:18:03'],
+            ['id' => 14, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KESEPULUH', 'product_picture' => null, 'created_at' => '2024-08-07 16:11:04', 'updated_at' => '2024-08-07 16:11:04'],
+            ['id' => 15, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KESEBELAS', 'product_picture' => null, 'created_at' => '2024-08-07 16:11:31', 'updated_at' => '2024-08-07 16:11:31'],
+            ['id' => 16, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KEDUABLES', 'product_picture' => null, 'created_at' => '2024-08-07 16:11:58', 'updated_at' => '2024-08-07 16:12:22'],
+            ['id' => 17, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KETIGABELAS', 'product_picture' => null, 'created_at' => '2024-08-08 23:00:41', 'updated_at' => '2024-08-09 23:42:15'],
+            ['id' => 18, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KEEMPATBELAS', 'product_picture' => null, 'created_at' => '2024-08-10 03:59:56', 'updated_at' => '2024-08-10 06:55:30'],
+            ['id' => 38, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KELIMABELAS', 'product_picture' => null, 'created_at' => '2024-08-13 23:05:34', 'updated_at' => '2024-08-13 23:05:34'],
+            ['id' => 61, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KEENAMBELAS', 'product_picture' => null, 'created_at' => '2024-08-18 04:38:11', 'updated_at' => '2024-08-21 23:16:01'],
+            ['id' => 62, 'model_code' => 'TRY', 'model_year' => '2017', 'item_name' => 'FR FENDER', 'product_picture' => null, 'created_at' => '2024-08-24 02:57:55', 'updated_at' => '2025-02-16 05:39:09'],
+            ['id' => 63, 'model_code' => '22RN', 'model_year' => '2022', 'item_name' => 'FR FENDER', 'product_picture' => null, 'created_at' => '2024-08-24 02:58:17', 'updated_at' => '2024-08-24 02:59:13'],
+            ['id' => 64, 'model_code' => 'ABCF', 'model_year' => '2025', 'item_name' => 'ITEM PERTAMA', 'product_picture' => null, 'created_at' => '2025-02-16 05:50:23', 'updated_at' => '2025-02-16 05:50:23'],
+            ['id' => 65, 'model_code' => 'FFVV', 'model_year' => '2026', 'item_name' => 'ITEM KETUJUHBELAS', 'product_picture' => '65.FFVV.2026.ITEM KETUJUHBELAS.jpeg', 'created_at' => '2025-07-16 17:29:52', 'updated_at' => '2025-07-16 17:29:52'],
+        ];
+        
+        foreach ($items as $item) {
+            DB::table('model_items')->insert($item);
+        }
+        
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        
+        // Check results
+        $count = DB::table('model_items')->count();
+        $sample = DB::table('model_items')->limit(5)->get();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Model items data fixed and imported successfully',
+            'records_imported' => $count,
+            'sample_data' => $sample,
+            'total_should_be' => 20
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to fix model_items: ' . $e->getMessage(),
+            'line' => $e->getLine()
+        ], 500);
+    }
+});
+
 // Alternative: Import from simpler local_data_export.sql
 Route::get('/import-simple-data', function () {
     try {
