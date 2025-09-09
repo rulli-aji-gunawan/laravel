@@ -389,6 +389,84 @@ Route::get('/check-imported-data', function () {
     }
 });
 
+// Fix downtime_categories structure and reimport data
+Route::get('/fix-downtime-categories', function () {
+    try {
+        // Run the migration to fix table structure
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        
+        // Drop and recreate table with correct structure
+        Schema::dropIfExists('downtime_categories');
+        
+        Schema::create('downtime_categories', function ($table) {
+            $table->id();
+            $table->string('downtime_name');
+            $table->string('downtime_type');
+            $table->timestamps();
+        });
+        
+        // Re-import downtime_categories data from backup file
+        $sqlFilePath = base_path('backup_production_data.sql');
+        $sql = file_get_contents($sqlFilePath);
+        
+        // Fix encoding
+        if (!mb_check_encoding($sql, 'UTF-8')) {
+            $encoding = mb_detect_encoding($sql, ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'], true);
+            if ($encoding && $encoding !== 'UTF-8') {
+                $sql = mb_convert_encoding($sql, 'UTF-8', $encoding);
+            }
+        }
+        
+        // Extract only downtime_categories INSERT statement
+        if (preg_match('/INSERT INTO `downtime_categories`[^;]+;/is', $sql, $matches)) {
+            $insertStatement = $matches[0];
+            
+            // The original data format: (id, downtime_name, downtime_type, remember_token, created_at, updated_at)
+            // Convert to match our new structure (remove remember_token column)
+            $statement = preg_replace('/^INSERT\s+INTO/i', 'INSERT IGNORE INTO', $insertStatement);
+            
+            // Parse the VALUES part and reformat
+            if (preg_match('/VALUES\s+(.+);/', $statement, $valueMatches)) {
+                $valuesString = $valueMatches[1];
+                
+                // Convert old format to new format by removing 4th column (remember_token)
+                $statement = "INSERT IGNORE INTO `downtime_categories` (`id`, `downtime_name`, `downtime_type`, `created_at`, `updated_at`) VALUES " . $valuesString;
+                
+                DB::statement($statement);
+                $success = true;
+                $message = "Downtime categories table fixed and data imported successfully";
+            } else {
+                $success = false;
+                $message = "Could not parse VALUES from INSERT statement";
+            }
+        } else {
+            $success = false;
+            $message = "Could not find downtime_categories INSERT statement in backup file";
+        }
+        
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        
+        // Check results
+        $count = DB::table('downtime_categories')->count();
+        $sample = DB::table('downtime_categories')->limit(3)->get();
+        
+        return response()->json([
+            'status' => $success ? 'success' : 'warning',
+            'message' => $message,
+            'table_recreated' => true,
+            'records_imported' => $count,
+            'sample_data' => $sample
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to fix downtime_categories: ' . $e->getMessage(),
+            'line' => $e->getLine()
+        ], 500);
+    }
+});
+
 // Alternative: Import from simpler local_data_export.sql
 Route::get('/import-simple-data', function () {
     try {
