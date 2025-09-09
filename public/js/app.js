@@ -22,35 +22,13 @@ const toggleSidebar = document.querySelector(".toggle-sidebar");
 const logo = document.querySelector(".logo-box");
 const sidebar = document.querySelector(".sidebar");
 
-console.log("Toggle Sidebar Debug:");
-console.log("toggleSidebar element:", toggleSidebar);
-console.log("sidebar element:", sidebar);
-console.log("logo element:", logo);
+toggleSidebar.addEventListener("click", () => {
+  sidebar.classList.toggle("close");
+});
 
-// Null check untuk mencegah error
-if (toggleSidebar && sidebar) {
-    console.log("Adding click event to toggle-sidebar");
-    toggleSidebar.addEventListener("click", (e) => {
-      console.log("Toggle sidebar clicked!");
-      e.preventDefault();
-      sidebar.classList.toggle("close");
-      console.log("Sidebar classes after toggle:", sidebar.classList.toString());
-    });
-} else {
-    console.log("toggleSidebar or sidebar not found!");
-}
-
-if (logo && sidebar) {
-    console.log("Adding click event to logo");
-    logo.addEventListener("click", (e) => {
-      console.log("Logo clicked!");
-      e.preventDefault();
-      sidebar.classList.toggle("close");
-      console.log("Sidebar classes after logo click:", sidebar.classList.toString());
-    });
-} else {
-    console.log("logo or sidebar not found!");
-}
+logo.addEventListener("click", () => {
+  sidebar.classList.toggle("close");
+});
 
 const inputQty = document.querySelector(".input-qty");
 function limitInputLength(inputQty, maxLength) {
