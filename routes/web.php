@@ -180,44 +180,79 @@ Route::get('/import-original-data', function () {
             throw new Exception("SQL file is empty or could not be read");
         }
         
+        // Clean and prepare SQL
+        $sql = preg_replace('/\/\*.*?\*\//s', '', $sql); // Remove /* */ comments
+        $sql = preg_replace('/^--.*$/m', '', $sql); // Remove -- comments
+        $sql = preg_replace('/^\s*$/m', '', $sql); // Remove empty lines
+        
         // Split SQL into individual statements
         $statements = array_filter(
             array_map('trim', explode(';', $sql)),
             function($stmt) {
-                return !empty($stmt) && !preg_match('/^--/', $stmt) && !preg_match('/^\/\*/', $stmt);
+                return !empty($stmt) && 
+                       !preg_match('/^(SET|LOCK|UNLOCK|DROP|CREATE TABLE|ALTER TABLE)/i', trim($stmt)) &&
+                       !preg_match('/^\/\*/', $stmt) &&
+                       !preg_match('/^--/', $stmt) &&
+                       !preg_match('/^!/', $stmt);
             }
         );
         
         $successCount = 0;
         $errorCount = 0;
         $errors = [];
+        $dataImported = [];
         
         DB::beginTransaction();
         
-        foreach ($statements as $statement) {
-            if (empty(trim($statement))) continue;
+        // Disable foreign key checks temporarily
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        
+        foreach ($statements as $index => $statement) {
+            $statement = trim($statement);
+            if (empty($statement)) continue;
             
             try {
-                // Skip certain statements that might cause issues
-                if (preg_match('/^(SET|LOCK|UNLOCK)/i', trim($statement))) {
+                // Only process INSERT statements for data import
+                if (preg_match('/^INSERT\s+INTO\s+(\w+)/i', $statement, $matches)) {
+                    $tableName = $matches[1];
+                    
+                    // Replace INSERT with INSERT IGNORE to skip duplicates
+                    $statement = preg_replace('/^INSERT\s+INTO/i', 'INSERT IGNORE INTO', $statement);
+                    
+                    DB::statement($statement);
+                    $successCount++;
+                    
+                    if (!isset($dataImported[$tableName])) {
+                        $dataImported[$tableName] = 0;
+                    }
+                    $dataImported[$tableName]++;
+                }
+                
+            } catch (\Exception $e) {
+                $errorCount++;
+                $errorMsg = $e->getMessage();
+                
+                // Skip common harmless errors
+                if (strpos($errorMsg, 'Duplicate entry') !== false ||
+                    strpos($errorMsg, 'doesn\'t exist') !== false) {
                     continue;
                 }
                 
-                DB::statement($statement);
-                $successCount++;
-            } catch (\Exception $e) {
-                $errorCount++;
                 $errors[] = [
+                    'index' => $index,
                     'statement' => substr($statement, 0, 100) . '...',
-                    'error' => $e->getMessage()
+                    'error' => $errorMsg
                 ];
                 
-                // Continue with other statements, don't fail completely
-                if ($errorCount > 10) {
-                    throw new Exception("Too many errors, stopping import");
+                // Stop if too many real errors
+                if (count($errors) > 5) {
+                    break;
                 }
             }
         }
+        
+        // Re-enable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         
         DB::commit();
         
@@ -226,8 +261,9 @@ Route::get('/import-original-data', function () {
             'message' => 'Original data imported successfully',
             'successful_statements' => $successCount,
             'failed_statements' => $errorCount,
+            'data_imported' => $dataImported,
             'errors' => $errors,
-            'total_statements' => count($statements)
+            'total_insert_statements' => count($statements)
         ]);
         
     } catch (\Exception $e) {
@@ -235,7 +271,87 @@ Route::get('/import-original-data', function () {
         return response()->json([
             'status' => 'error',
             'message' => 'Failed to import original data: ' . $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'line' => $e->getLine(),
+            'file' => basename($e->getFile())
+        ], 500);
+    }
+});
+
+// Alternative: Import from simpler local_data_export.sql
+Route::get('/import-simple-data', function () {
+    try {
+        // Read the simpler SQL file
+        $sqlFilePath = base_path('local_data_export.sql');
+        
+        if (!file_exists($sqlFilePath)) {
+            throw new Exception("SQL file not found: " . $sqlFilePath);
+        }
+        
+        $sql = file_get_contents($sqlFilePath);
+        
+        if (empty($sql)) {
+            throw new Exception("SQL file is empty or could not be read");
+        }
+        
+        // Clean SQL
+        $sql = preg_replace('/\/\*.*?\*\!/s', '', $sql); // Remove MySQL comments
+        $sql = preg_replace('/^--.*$/m', '', $sql); // Remove -- comments
+        
+        // Split by INSERT statements
+        preg_match_all('/INSERT INTO[^;]+;/is', $sql, $matches);
+        $insertStatements = $matches[0];
+        
+        $successCount = 0;
+        $errorCount = 0;
+        $errors = [];
+        $results = [];
+        
+        DB::beginTransaction();
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        
+        foreach ($insertStatements as $statement) {
+            try {
+                // Convert to INSERT IGNORE to skip duplicates
+                $statement = preg_replace('/^INSERT INTO/i', 'INSERT IGNORE INTO', trim($statement));
+                
+                if (preg_match('/INSERT IGNORE INTO\s+`?(\w+)`?/i', $statement, $matches)) {
+                    $tableName = $matches[1];
+                    
+                    DB::statement($statement);
+                    $successCount++;
+                    
+                    if (!isset($results[$tableName])) {
+                        $results[$tableName] = 0;
+                    }
+                    $results[$tableName]++;
+                }
+                
+            } catch (\Exception $e) {
+                $errorCount++;
+                $errors[] = [
+                    'table' => $tableName ?? 'unknown',
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+        
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        DB::commit();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Simple data imported successfully',
+            'imported_tables' => $results,
+            'successful_inserts' => $successCount,
+            'failed_inserts' => $errorCount,
+            'errors' => $errors
+        ]);
+        
+    } catch (\Exception $e) {
+        DB::rollback();
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to import simple data: ' . $e->getMessage()
         ], 500);
     }
 });
