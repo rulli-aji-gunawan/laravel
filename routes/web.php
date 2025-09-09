@@ -184,11 +184,48 @@ Route::get('/import-original-data', function () {
         preg_match_all('/INSERT\s+INTO\s+[^;]+;/is', $sql, $matches);
         $insertStatements = $matches[0];
         
+        // Additional debugging - let's try manual count
+        $manualInsertCount = substr_count($sql, 'INSERT INTO');
+        $sqlSubstring = substr($sql, 0, 1000); // First 1000 chars for debugging
+        
         $successCount = 0;
         $errorCount = 0;
         $errors = [];
         $dataImported = [];
         $debugInfo = [];
+        
+        // If no regex matches but manual count shows inserts, try simpler approach
+        if (empty($insertStatements) && $manualInsertCount > 0) {
+            // Split by lines and find INSERT lines
+            $lines = explode("\n", $sql);
+            $insertStatements = [];
+            $currentStatement = '';
+            $inInsert = false;
+            
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+                
+                if (stripos($line, 'INSERT INTO') === 0) {
+                    if ($inInsert && !empty($currentStatement)) {
+                        $insertStatements[] = $currentStatement;
+                    }
+                    $currentStatement = $line;
+                    $inInsert = true;
+                } elseif ($inInsert) {
+                    $currentStatement .= ' ' . $line;
+                    if (substr($line, -1) === ';') {
+                        $insertStatements[] = $currentStatement;
+                        $currentStatement = '';
+                        $inInsert = false;
+                    }
+                }
+            }
+            
+            if ($inInsert && !empty($currentStatement)) {
+                $insertStatements[] = $currentStatement;
+            }
+        }
         
         DB::beginTransaction();
         
@@ -253,7 +290,13 @@ Route::get('/import-original-data', function () {
             'data_imported' => $dataImported,
             'errors' => array_slice($errors, 0, 5), // Only show first 5 errors
             'total_insert_statements_found' => count($insertStatements),
-            'debug_sample' => array_slice($debugInfo, 0, 3) // Show first 3 for debugging
+            'debug_sample' => array_slice($debugInfo, 0, 3), // Show first 3 for debugging
+            'debug_info' => [
+                'manual_insert_count' => $manualInsertCount ?? 0,
+                'sql_substring' => substr($sqlSubstring ?? '', 0, 200),
+                'file_size' => strlen($sql),
+                'has_insert_text' => strpos($sql, 'INSERT INTO') !== false ? 'yes' : 'no'
+            ]
         ]);
         
     } catch (\Exception $e) {
