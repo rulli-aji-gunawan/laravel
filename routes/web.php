@@ -571,6 +571,20 @@ Route::get('/fix-model-items', function () {
     try {
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
         
+        // First, check if product_picture column exists, if not add it
+        if (!Schema::hasColumn('model_items', 'product_picture')) {
+            Schema::table('model_items', function ($table) {
+                $table->string('product_picture')->nullable()->after('item_name');
+            });
+        }
+        
+        // Remove remember_token if it exists (not needed for this table)
+        if (Schema::hasColumn('model_items', 'remember_token')) {
+            Schema::table('model_items', function ($table) {
+                $table->dropColumn('remember_token');
+            });
+        }
+        
         // Clear existing data
         DB::table('model_items')->truncate();
         
