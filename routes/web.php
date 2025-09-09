@@ -514,6 +514,58 @@ Route::get('/fix-downtime-categories', function () {
     }
 });
 
+// Manual insert downtime_categories data based on original backup
+Route::get('/insert-downtime-categories-manual', function () {
+    try {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        
+        // Clear existing data
+        DB::table('downtime_categories')->truncate();
+        
+        // Insert data manually based on the backup file data
+        $categories = [
+            ['id' => 1, 'downtime_name' => 'Briefing Time', 'downtime_type' => 'Non Productive Time', 'created_at' => '2024-08-20 15:17:41', 'updated_at' => '2024-08-24 01:26:06'],
+            ['id' => 3, 'downtime_name' => 'ADC', 'downtime_type' => 'Planned Downtime', 'created_at' => '2024-08-24 01:34:43', 'updated_at' => '2024-08-24 01:34:43'],
+            ['id' => 4, 'downtime_name' => 'QC Check', 'downtime_type' => 'Planned Downtime', 'created_at' => '2024-08-24 01:35:08', 'updated_at' => '2024-08-24 01:35:08'],
+            ['id' => 5, 'downtime_name' => 'Dies', 'downtime_type' => 'Downtime', 'created_at' => '2024-08-24 01:35:58', 'updated_at' => '2024-08-24 01:35:58'],
+            ['id' => 6, 'downtime_name' => 'Equipment', 'downtime_type' => 'Downtime', 'created_at' => '2024-08-24 01:36:09', 'updated_at' => '2024-08-24 01:36:09'],
+            ['id' => 7, 'downtime_name' => 'Material', 'downtime_type' => 'Downtime', 'created_at' => '2024-08-24 01:36:42', 'updated_at' => '2024-08-24 01:36:42'],
+            ['id' => 8, 'downtime_name' => 'Operational', 'downtime_type' => 'Downtime', 'created_at' => '2024-08-24 01:36:56', 'updated_at' => '2024-08-24 01:36:56'],
+            ['id' => 9, 'downtime_name' => 'Quality', 'downtime_type' => 'Downtime', 'created_at' => '2024-08-24 01:37:13', 'updated_at' => '2024-08-24 01:37:13'],
+            ['id' => 10, 'downtime_name' => 'Robot', 'downtime_type' => 'Downtime', 'created_at' => '2024-08-24 01:38:01', 'updated_at' => '2024-08-24 01:38:01'],
+            ['id' => 11, 'downtime_name' => 'Trial', 'downtime_type' => 'Planned Downtime', 'created_at' => '2024-08-24 01:38:31', 'updated_at' => '2024-08-24 01:38:31'],
+            ['id' => 12, 'downtime_name' => 'Break Time', 'downtime_type' => 'Non Productive Time', 'created_at' => '2024-08-24 01:38:59', 'updated_at' => '2024-08-24 01:38:59'],
+            ['id' => 13, 'downtime_name' => 'Safety Meeting', 'downtime_type' => 'Non Productive Time', 'created_at' => '2024-08-24 01:39:23', 'updated_at' => '2024-08-24 01:39:23'],
+            ['id' => 14, 'downtime_name' => 'Emergency Meeting', 'downtime_type' => 'Non Productive Time', 'created_at' => '2024-08-24 01:39:51', 'updated_at' => '2024-08-24 01:39:51'],
+            ['id' => 15, 'downtime_name' => 'Disaster Simulation', 'downtime_type' => 'Non Productive Time', 'created_at' => '2024-08-24 01:40:11', 'updated_at' => '2024-08-24 08:20:54'],
+        ];
+        
+        foreach ($categories as $category) {
+            DB::table('downtime_categories')->insert($category);
+        }
+        
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        
+        // Check results
+        $count = DB::table('downtime_categories')->count();
+        $sample = DB::table('downtime_categories')->limit(5)->get();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Downtime categories data inserted successfully',
+            'records_imported' => $count,
+            'sample_data' => $sample
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to insert downtime_categories: ' . $e->getMessage(),
+            'line' => $e->getLine()
+        ], 500);
+    }
+});
+
 // Alternative: Import from simpler local_data_export.sql
 Route::get('/import-simple-data', function () {
     try {
