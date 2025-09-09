@@ -164,6 +164,82 @@ Route::get('/debug-api-items/{model}', function ($model) {
     }
 });
 
+// Import original database data from backup_production_data.sql
+Route::get('/import-original-data', function () {
+    try {
+        // Read the SQL file
+        $sqlFilePath = base_path('backup_production_data.sql');
+        
+        if (!file_exists($sqlFilePath)) {
+            throw new Exception("SQL file not found: " . $sqlFilePath);
+        }
+        
+        $sql = file_get_contents($sqlFilePath);
+        
+        if (empty($sql)) {
+            throw new Exception("SQL file is empty or could not be read");
+        }
+        
+        // Split SQL into individual statements
+        $statements = array_filter(
+            array_map('trim', explode(';', $sql)),
+            function($stmt) {
+                return !empty($stmt) && !preg_match('/^--/', $stmt) && !preg_match('/^\/\*/', $stmt);
+            }
+        );
+        
+        $successCount = 0;
+        $errorCount = 0;
+        $errors = [];
+        
+        DB::beginTransaction();
+        
+        foreach ($statements as $statement) {
+            if (empty(trim($statement))) continue;
+            
+            try {
+                // Skip certain statements that might cause issues
+                if (preg_match('/^(SET|LOCK|UNLOCK)/i', trim($statement))) {
+                    continue;
+                }
+                
+                DB::statement($statement);
+                $successCount++;
+            } catch (\Exception $e) {
+                $errorCount++;
+                $errors[] = [
+                    'statement' => substr($statement, 0, 100) . '...',
+                    'error' => $e->getMessage()
+                ];
+                
+                // Continue with other statements, don't fail completely
+                if ($errorCount > 10) {
+                    throw new Exception("Too many errors, stopping import");
+                }
+            }
+        }
+        
+        DB::commit();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Original data imported successfully',
+            'successful_statements' => $successCount,
+            'failed_statements' => $errorCount,
+            'errors' => $errors,
+            'total_statements' => count($statements)
+        ]);
+        
+    } catch (\Exception $e) {
+        DB::rollback();
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to import original data: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
 // Manual migration trigger
 Route::get('/run-migration', function () {
     try {
